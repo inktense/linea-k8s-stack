@@ -1,0 +1,30 @@
+{{- if .Values.ethstats.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "linea.fullname" . }}-ethstats
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ethstats
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "linea.name" . }}
+      component: ethstats
+  template:
+    metadata:
+      labels:
+        app: {{ include "linea.name" . }}
+        component: ethstats
+    spec:
+      containers:
+        - name: ethstats
+          image: "{{ .Values.ethstats.image.repository }}:{{ .Values.ethstats.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.ethstats.service.port }}
+          env:
+            - name: WS_SECRET
+              value: {{ .Values.ethstats.env.WS_SECRET | quote }}
+{{- end }}

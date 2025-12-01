@@ -1,0 +1,21 @@
+{{- if .Values.maru.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "linea.fullname" . }}-maru-svc
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: maru
+spec:
+  type: {{ .Values.maru.service.type | default "ClusterIP" }}
+  ports:
+    - name: http
+      port: {{ .Values.maru.service.httpPort }}
+      targetPort: {{ .Values.maru.service.httpPort }}
+    - name: metrics
+      port: {{ .Values.maru.service.metricsPort }}
+      targetPort: {{ .Values.maru.service.metricsPort }}
+  selector:
+    app: {{ include "linea.name" . }}
+    component: maru
+{{- end }}

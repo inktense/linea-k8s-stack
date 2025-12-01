@@ -1,0 +1,112 @@
+replicaCount: 1
+
+global:
+  imagePullPolicy: IfNotPresent
+  namespace: default
+
+sequencer:
+  enabled: true
+
+  image:
+    repository: consensys/linea-besu-package
+    tag: "beta-v4.0-rc20-20251104100707-3294a02"
+  resources:
+
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+    limits:
+      cpu: 1
+      memory: 1Gi
+  persistence:
+
+    enabled: true
+    size: 10Gi
+    storageClass: "" # leave empty to use default
+
+  service:
+    portMetrics: 9545
+    type: ClusterIP
+
+maru:
+  enabled: true
+  image:
+    repository: consensys/maru
+    tag: "0f6dc85"
+
+  command:
+    - java
+    - -Dlog4j2.configurationFile=configs/maru/log4j.xml
+    - -jar
+    - maru.jar
+    - --maru-genesis-file
+    - configs/genesis.json
+    - --config
+    - configs/config.toml
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+
+  service:
+    httpPort: 8080
+    metricsPort: 9545
+    type: ClusterIP
+
+besu:
+  enabled: true
+  image:
+    repository: consensys/linea-besu-package
+    tag: "beta-v4.0-rc20-20251104100707-3294a02"
+
+  command: ["besu-untuned"]
+
+  service:
+    type: LoadBalancer           
+    rpcPort: 8545
+    wsPort: 8546
+    metricsPort: 9545
+  
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: ""
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 70
+
+ethstats:
+  enabled: true
+  image:
+    repository: consensys/linea-ethstats-server
+    tag: "7422b2a-1730387766"
+
+  service:
+    type: LoadBalancer
+    port: 3000
+  env:
+    WS_SECRET: "12345"
+

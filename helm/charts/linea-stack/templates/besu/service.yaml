@@ -1,0 +1,24 @@
+{{- if .Values.besu.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "linea.fullname" . }}-besu-svc
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: besu
+spec:
+  type: {{ .Values.besu.service.type | default "ClusterIP" }}
+  ports:
+    - name: json-rpc
+      port: {{ .Values.besu.service.rpcPort }}
+      targetPort: {{ .Values.besu.service.rpcPort }}
+    - name: ws
+      port: {{ .Values.besu.service.wsPort }}
+      targetPort: {{ .Values.besu.service.wsPort }}
+    - name: metrics
+      port: {{ .Values.besu.service.metricsPort }}
+      targetPort: {{ .Values.besu.service.metricsPort }}
+  selector:
+    app: {{ include "linea.name" . }}
+    component: besu
+{{- end }}

@@ -1,0 +1,19 @@
+apiVersion: v2
+name: linea-stack
+description: "Helm chart for a simplified Linea stack (sequencer, maru, besu, ethstats) - production-ready skeleton"
+type: application
+
+version: 0.1.0
+appVersion: "v1"
+
+keywords:
+  - linea
+  - besu
+  - maru
+  - sequencer
+  - ethstats
+
+maintainers:
+  - name: Bianca Popescu
+    email: inktense12@gmail.com
+    url: https://github.com/inktense12
