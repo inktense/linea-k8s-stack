@@ -1,0 +1,132 @@
+networks:
+  linea:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.11.11.0/24
+          gateway: 10.11.11.1
+volumes:
+  sequencer_data:
+  maru_data:
+  besu_data:
+services:
+  sequencer:
+    container_name: sequencer
+    image: consensys/linea-besu-package:beta-v4.0-rc20-20251104100707-3294a02
+    # basic healthcheck
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c \"[ -f /tmp/pid ]\"" ]
+      interval: 1s
+      timeout: 1s
+      retries: 120
+    restart: "no"
+    environment:
+      # load log4j log configuration file
+      LOG4J_CONFIGURATION_FILE: /var/lib/besu/log4j.xml
+    entrypoint: besu-untuned
+    ports:
+      - "9545:9545" # metrics
+    user: root
+    command:
+      # connect client to ethstats
+      - --ethstats=sequencer-node:12345@ethstats:3000
+      # load client config file
+      - --config-file=/var/lib/besu/config.toml
+      # load static private p2p key
+      - --node-private-key-file=/var/lib/besu/key
+    volumes:
+      # mount client config file
+      - ./config/sequencer/config.toml:/var/lib/besu/config.toml:ro
+      # mount client denylist (empty but required)
+      - ./config/sequencer/denylist.txt:/var/lib/besu/deny-list.txt:ro
+      # mount p2p private static key
+      - ./config/sequencer/key:/var/lib/besu/key:ro
+      # mount log configuration file
+      - ./config/sequencer/log4j.xml:/var/lib/besu/log4j.xml:ro
+      # mount trace limits file
+      - ./config/common/tracelimits.toml:/var/lib/besu/traces-limits.toml:ro
+      # mount genesis file
+      - ./config/common/genesis.json:/var/lib/besu/genesis.json:ro
+      # mount a volume where blockchain data will be stored 
+      - sequencer_data:/opt/besu/data
+    networks:
+      linea:
+        ipv4_address: 10.11.11.101
+
+  maru:
+    image: consensys/maru:0f6dc85
+    depends_on:
+      sequencer:
+        condition: service_healthy
+    command:  
+      - java
+      # load log config file
+      - -Dlog4j2.configurationFile=configs/maru/log4j.xml
+      - -jar 
+      # load maru jar
+      - maru.jar
+      - --maru-genesis-file 
+      # load maru genesis file
+      - configs/genesis.json 
+      - --config
+      # load maru config file 
+      - configs/config.toml
+    volumes:
+      # mount maru config file
+      - ./config/maru/config.toml:/opt/consensys/maru/configs/config.toml:ro
+      # mount maru log config file
+      - ./config/maru/log4j.xml:/opt/consensys/maru/configs/log4j.xml:ro
+      # mount maru static p2p/validator key
+      - ./config/maru/key:/opt/consensys/maru/key:ro
+      # mount genesis file
+      - ./config/maru/genesis.json:/opt/consensys/maru/configs/genesis.json:ro
+      # mount a volume where maru blockchain data will be stored
+      - maru_data:/opt/consensys/maru/data
+    ports:
+      - "8080:8080" # http api
+      - "9546:9545" # metrics
+    networks:
+      - linea
+  besu:
+    image: consensys/linea-besu-package:beta-v4.0-rc20-20251104100707-3294a02
+    depends_on:
+      sequencer:
+        condition: service_healthy
+    ports:
+      - "8545:8545" # json-rpc
+      - "9547:9545" # metrics
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c \"[ -f /tmp/pid ]\"" ]
+      interval: 1s
+      timeout: 1s
+      retries: 120
+    restart: "no"
+    environment:
+      LOG4J_CONFIGURATION_FILE: /var/lib/besu/log4j.xml
+    user: root
+    entrypoint: besu-untuned
+    command:
+      - --ethstats=besu-node:12345@ethstats:3000
+      - --config-file=/var/lib/besu/config.toml
+      - --genesis-file=/var/lib/besu/genesis.json
+      - --bootnodes=enode://14408801a444dafc44afbccce2eb755f902aed3b5743fed787b3c790e021fef28b8c827ed896aa4e8fb46e22bd67c39f994a73768b4b382f8597b0d44370e15d@10.11.11.101:30303
+    volumes:
+      - ./config/besu/config.toml:/var/lib/besu/config.toml:ro
+      - ./config/sequencer/denylist.txt:/var/lib/besu/deny-list.txt:ro
+      - ./config/besu/log4j.xml:/var/lib/besu/log4j.xml:ro
+      - ./config/common/tracelimits.toml:/var/lib/besu/traces-limits.toml:ro
+      - ./config/common/genesis.json:/var/lib/besu/genesis.json
+      - besu_data:/opt/besu/data:rw
+    networks:
+      - linea
+  # not really a part of the core Linea stack, but it is pretty useful to check the state of the network nodes - http://localhost:3000
+  ethstats:
+    container_name: ethstats
+    image: consensys/linea-ethstats-server:7422b2a-1730387766
+    environment:
+      WS_SECRET: "12345"
+    ports:
+      - "3000:3000"
+    networks:
+      - linea
+    
