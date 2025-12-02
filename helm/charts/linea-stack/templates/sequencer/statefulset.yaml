@@ -34,7 +34,7 @@ spec:
 
           ports:
             - name: metrics
-              containerPort: {{ .Values.sequencer.service.portMetrics }}
+              containerPort: {{ .Values.sequencer.service.metricsPort }}
 
           env:
             - name: LOG4J_CONFIGURATION_FILE

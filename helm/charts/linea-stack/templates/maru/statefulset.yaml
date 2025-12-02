@@ -22,7 +22,7 @@ spec:
       initContainers:
       - name: wait-for-sequencer
         image: curlimages/curl:7.85.0
-        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.portMetrics }}; do sleep 1; done"]
+        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
 
       containers:
         - name: maru

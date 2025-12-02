@@ -1,0 +1,88 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+
+{{/* Sequencer Metrics */}}
+{{- if .Values.sequencer.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "linea.fullname" . }}-sequencer-sm
+  namespace: {{ .Values.metrics.serviceMonitor.namespace | default "monitoring" }}
+  labels:
+    release: {{ .Values.metrics.serviceMonitor.releaseLabel | default "monitoring" }}
+    {{ include "linea.labels" . | nindent 4 }}
+    {{- range $k, $v := .Values.metrics.serviceMonitor.additionalLabels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "linea.name" . }}
+      app.kubernetes.io/component: sequencer
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
+
+
+{{/* Maru Metrics */}}
+{{- if .Values.maru.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "linea.fullname" . }}-maru-sm
+  namespace: {{ .Values.metrics.serviceMonitor.namespace | default "monitoring" }}
+  labels:
+    release: {{ .Values.metrics.serviceMonitor.releaseLabel | default "monitoring" }}
+    {{ include "linea.labels" . | nindent 4 }}
+    {{- range $k, $v := .Values.metrics.serviceMonitor.additionalLabels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "linea.name" . }}
+      app.kubernetes.io/component: maru
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
+
+
+{{/* Besu Metrics */}}
+{{- if .Values.besu.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "linea.fullname" . }}-besu-sm
+  namespace: {{ .Values.metrics.serviceMonitor.namespace | default "monitoring" }}
+  labels:
+    release: {{ .Values.metrics.serviceMonitor.releaseLabel | default "monitoring" }}
+    {{ include "linea.labels" . | nindent 4 }}
+    {{- range $k, $v := .Values.metrics.serviceMonitor.additionalLabels }}
+    {{ $k }}: {{ $v | quote }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "linea.name" . }}
+      app.kubernetes.io/component: besu
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - port: metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
+
+{{- end }}

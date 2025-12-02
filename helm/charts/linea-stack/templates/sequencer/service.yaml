@@ -7,11 +7,12 @@ metadata:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: sequencer
 spec:
+  clusterIP: "None"
   type: {{ .Values.sequencer.service.type | default "ClusterIP" }}
   ports:
     - name: metrics
-      port: {{ .Values.sequencer.service.portMetrics }}
-      targetPort: {{ .Values.sequencer.service.portMetrics }}
+      port: {{ .Values.sequencer.service.metricsPort }}
+      targetPort: {{ .Values.sequencer.service.metricsPort }}
     - name: p2p
       port: 30303
       targetPort: 30303

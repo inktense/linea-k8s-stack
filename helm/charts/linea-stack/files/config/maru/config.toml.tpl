@@ -29,8 +29,8 @@ eth-api-endpoint    = { endpoint = "http://{{ include "linea.fullname" . }}-sequ
 follower-besu = { endpoint = "http://{{ include "linea.fullname" . }}-besu-svc:8550" }
 
 [observability]
-port = 9090
-jvm-metrics-enabled = true
+port = 9545
+jvm-metrics-enabled = false
 prometheus-metrics-enabled = true
 
 [api]

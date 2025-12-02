@@ -4,7 +4,7 @@ metadata:
   name: {{ include "linea.fullname" . }}-maru-config
 data:
   config.toml: |-
-{{ tpl (.Files.Get "files/config/maru/config.toml") . | indent 4 }}
+{{ tpl (.Files.Get "files/config/maru/config.toml.tpl") . | indent 4 }}
 
   log4j.xml: |-
 {{ .Files.Get "files/config/maru/log4j.xml" | indent 4 }}

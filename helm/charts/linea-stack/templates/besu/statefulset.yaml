@@ -25,7 +25,28 @@ spec:
       initContainers:
       - name: wait-for-sequencer
         image: curlimages/curl:7.85.0
-        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.portMetrics }}; do sleep 1; done"]
+        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
+      - name: resolve-sequencer-ip
+        image: alpine:3.18
+        command: ["sh", "-c"]
+        args:
+          - |
+            SEQUENCER_HOST="{{ include "linea.fullname" . }}-sequencer-0.{{ include "linea.fullname" . }}-sequencer-svc"
+            echo "Resolving $SEQUENCER_HOST..."
+            for i in $(seq 1 20); do
+              SEQUENCER_IP=$(getent hosts $SEQUENCER_HOST 2>/dev/null | awk '{print $1; exit}')
+              if [ -n "$SEQUENCER_IP" ] && [ "$SEQUENCER_IP" != "127.0.0.1" ]; then
+                echo "$SEQUENCER_IP" > /shared/sequencer-ip.txt
+                echo "Resolved sequencer IP: $SEQUENCER_IP"
+                exit 0
+              fi
+              [ $i -lt 20 ] && sleep 2
+            done
+            echo "Failed to resolve sequencer IP"
+            exit 1
+        volumeMounts:
+          - name: shared
+            mountPath: /shared
      
       containers:
         - name: besu
@@ -33,15 +54,17 @@ spec:
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
 
           command:
-            {{- range .Values.besu.command }}
-            - "{{ . }}"
-            {{- end }}
+            - "sh"
+            - "-c"
+            - |
+              SEQUENCER_IP=$(cat /shared/sequencer-ip.txt)
+              exec {{ index .Values.besu.command 0 }} \
+                --ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-ethstats-svc:3000 \
+                --config-file=/var/lib/besu/config.toml \
+                --genesis-file=/var/lib/besu/genesis.json \
+                --bootnodes=enode://{{ .Values.sequencer.enode }}@${SEQUENCER_IP}:30303
 
-          args:
-            - "--ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-ethstats-svc:3000"
-            - "--config-file=/var/lib/besu/config.toml"
-            - "--genesis-file=/var/lib/besu/genesis.json"
-            - "--bootnodes=enode://{{ .Values.sequencer.enode }}@{{ include "linea.fullname" . }}-sequencer-svc:30303"
+          args: []
 
           ports:
             - name: rpc
@@ -78,11 +101,16 @@ spec:
 
             - name: data
               mountPath: /opt/besu/data
+
+            - name: shared
+              mountPath: /shared
                 
       volumes:
         - name: config
           configMap:
             name: {{ include "linea.fullname" . }}-besu-config
+        - name: shared
+          emptyDir: {}
 
   volumeClaimTemplates:
     - metadata:

@@ -26,7 +26,7 @@ sequencer:
     storageClass: "" # leave empty to use default
 
   service:
-    portMetrics: 9545
+    metricsPort: 9545
     type: ClusterIP
 
   p2pKeySecretName: "linea-stack-sequencer-p2p-key"
@@ -114,4 +114,13 @@ ethstats:
     port: 3000
   env:
     WS_SECRET: "12345"
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    namespace: monitoring
+    releaseLabel: monitoring
+    interval: 15s
+    scrapeTimeout: 10s
+    additionalLabels: {}
 
