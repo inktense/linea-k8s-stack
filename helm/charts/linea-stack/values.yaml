@@ -124,3 +124,30 @@ metrics:
     scrapeTimeout: 10s
     additionalLabels: {}
 
+backup:
+  enabled: false  # Set to true after configuring S3 credentials
+  schedule: "0 */6 * * *"  # Every 6 hours (cron format)
+  retention: 7  # Keep last 7 backups
+  compression: true
+  
+  storage:
+    type: s3  # S3 storage
+    bucket: "linea-backups"  # S3 bucket name
+    endpoint: ""  # Optional: For S3-compatible storage (MinIO, etc.), leave empty for AWS S3
+    region: "us-east-1"  # AWS region
+    path: "linea-stack"  # Path prefix in bucket
+  
+  credentialsSecret:
+    name: "linea-stack-backup-credentials"
+    # Secret must contain:
+    # - AWS_ACCESS_KEY_ID
+    # - AWS_SECRET_ACCESS_KEY
+  
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+

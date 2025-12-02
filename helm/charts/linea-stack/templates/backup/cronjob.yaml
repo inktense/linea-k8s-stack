@@ -1,0 +1,126 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "linea.fullname" . }}-backup
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.backup.retention }}
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{ include "linea.labels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: rclone/rclone:latest
+            imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+            command:
+              - /bin/sh
+              - -c
+              - |
+                set -e
+                TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+                BACKUP_DIR="/tmp/backup"
+                mkdir -p ${BACKUP_DIR}
+                
+                # Create backups
+                {{- if .Values.backup.compression }}
+                TAR_OPTS="-czf"
+                EXT=".tar.gz"
+                {{- else }}
+                TAR_OPTS="-cf"
+                EXT=".tar"
+                {{- end }}
+                
+                {{- if .Values.sequencer.enabled }}
+                [ -d "/sequencer-data" ] && tar ${TAR_OPTS} ${BACKUP_DIR}/sequencer-${TIMESTAMP}${EXT} -C /sequencer-data .
+                {{- end }}
+                {{- if .Values.maru.enabled }}
+                [ -d "/maru-data" ] && tar ${TAR_OPTS} ${BACKUP_DIR}/maru-${TIMESTAMP}${EXT} -C /maru-data .
+                {{- end }}
+                {{- if .Values.besu.enabled }}
+                [ -d "/besu-data" ] && tar ${TAR_OPTS} ${BACKUP_DIR}/besu-${TIMESTAMP}${EXT} -C /besu-data .
+                {{- end }}
+                
+                # Configure rclone for S3
+                mkdir -p /root/.config/rclone
+                cat > /root/.config/rclone/rclone.conf <<EOF
+                [s3]
+                type = s3
+                provider = AWS
+                access_key_id = ${AWS_ACCESS_KEY_ID}
+                secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+                region = {{ .Values.backup.storage.region }}
+                {{- if .Values.backup.storage.endpoint }}
+                endpoint = {{ .Values.backup.storage.endpoint }}
+                {{- end }}
+                EOF
+                
+                REMOTE="s3:{{ .Values.backup.storage.bucket }}/{{ .Values.backup.storage.path }}"
+                
+                # Upload backups
+                for backup_file in ${BACKUP_DIR}/*${EXT}; do
+                  [ -f "$backup_file" ] && rclone copy "$backup_file" "${REMOTE}/" && rm -f "$backup_file"
+                done
+                
+                # Cleanup old backups (keep last N)
+                rclone lsf "${REMOTE}/" | sort -r | tail -n +$(({{ .Values.backup.retention }} + 1)) | while read file; do
+                  [ -n "$file" ] && rclone delete "${REMOTE}/${file}"
+                done
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backup.credentialsSecret.name }}
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backup.credentialsSecret.name }}
+                  key: AWS_SECRET_ACCESS_KEY
+            resources:
+              {{- toYaml .Values.backup.resources | nindent 14 }}
+            volumeMounts:
+            {{- if .Values.sequencer.enabled }}
+            - name: sequencer-data
+              mountPath: /sequencer-data
+              readOnly: true
+            {{- end }}
+            {{- if .Values.maru.enabled }}
+            - name: maru-data
+              mountPath: /maru-data
+              readOnly: true
+            {{- end }}
+            {{- if .Values.besu.enabled }}
+            - name: besu-data
+              mountPath: /besu-data
+              readOnly: true
+            {{- end }}
+          volumes:
+          {{- if .Values.sequencer.enabled }}
+          - name: sequencer-data
+            persistentVolumeClaim:
+              claimName: data-{{ include "linea.fullname" . }}-sequencer-0
+          {{- end }}
+          {{- if .Values.maru.enabled }}
+          - name: maru-data
+            persistentVolumeClaim:
+              claimName: data-{{ include "linea.fullname" . }}-maru-0
+          {{- end }}
+          {{- if .Values.besu.enabled }}
+          - name: besu-data
+            persistentVolumeClaim:
+              claimName: data-{{ include "linea.fullname" . }}-besu-0
+          {{- end }}
+{{- end }}
+
