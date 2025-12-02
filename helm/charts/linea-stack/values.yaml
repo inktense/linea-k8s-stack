@@ -29,6 +29,9 @@ sequencer:
     portMetrics: 9545
     type: ClusterIP
 
+  p2pKeySecretName: "linea-stack-sequencer-p2p-key"
+  enode: "14408801a444dafc44afbccce2eb755f902aed3b5743fed787b3c790e021fef28b8c827ed896aa4e8fb46e22bd67c39f994a73768b4b382f8597b0d44370e15d"
+
 maru:
   enabled: true
   image:
@@ -63,6 +66,8 @@ maru:
     httpPort: 8080
     metricsPort: 9545
     type: ClusterIP
+
+  p2pKeySecretName: "linea-stack-maru-p2p-key"
 
 besu:
   enabled: true

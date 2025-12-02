@@ -1,0 +1,28 @@
+{{- if .Values.besu.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "linea.fullname" . }}-besu-hpa
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: {{ include "linea.fullname" . }}-besu
+  minReplicas: {{ .Values.besu.hpa.minReplicas }}
+  maxReplicas: {{ .Values.besu.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.besu.hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.besu.hpa.targetMemoryUtilizationPercentage }}
+{{- end }}

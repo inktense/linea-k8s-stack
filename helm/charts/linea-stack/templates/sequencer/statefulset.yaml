@@ -1,0 +1,92 @@
+{{- if .Values.sequencer.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "linea.fullname" . }}-sequencer
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: sequencer
+spec:
+  serviceName: {{ include "linea.fullname" . }}-sequencer-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "linea.name" . }}
+      component: sequencer
+  template:
+    metadata:
+      labels:
+        app: {{ include "linea.name" . }}
+        component: sequencer
+    spec:
+      containers:
+        - name: sequencer
+          image: "{{ .Values.sequencer.image.repository }}:{{ .Values.sequencer.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+
+          command:
+            - "besu-untuned"
+
+          args:
+            - "--ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-ethstats-svc:3000"
+            - "--config-file=/var/lib/besu/config.toml"
+            - "--node-private-key-file=/var/lib/besu/key"
+
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.sequencer.service.portMetrics }}
+
+          env:
+            - name: LOG4J_CONFIGURATION_FILE
+              value: /var/lib/besu/log4j.xml
+
+          volumeMounts:
+            - name: config
+              mountPath: /var/lib/besu/config.toml
+              subPath: config.toml
+
+            - name: config
+              mountPath: /var/lib/besu/log4j.xml
+              subPath: log4j.xml
+
+            - name: config
+              mountPath: /var/lib/besu/traces-limits.toml
+              subPath: tracelimits.toml
+
+            - name: config
+              mountPath: /var/lib/besu/genesis.json
+              subPath: genesis.json
+
+            - name: config
+              mountPath: /var/lib/besu/deny-list.txt
+              subPath: denylist.txt
+
+            - name: data
+              mountPath: /opt/besu/data
+
+            - name: key
+              mountPath: /var/lib/besu/key
+              subPath: key
+
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "linea.fullname" . }}-sequencer-config
+        - name: key
+          secret:
+            secretName: {{ .Values.sequencer.p2pKeySecretName }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.sequencer.persistence.size }}
+        {{- if .Values.sequencer.persistence.storageClass }}
+        storageClassName: {{ .Values.sequencer.persistence.storageClass | quote }}
+        {{- else }}
+        storageClassName: null
+        {{- end }}
+{{- end }}

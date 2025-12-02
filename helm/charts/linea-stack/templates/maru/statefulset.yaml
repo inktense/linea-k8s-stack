@@ -1,0 +1,89 @@
+{{- if .Values.maru.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "linea.fullname" . }}-maru
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: maru
+spec:
+  serviceName: {{ include "linea.fullname" . }}-maru-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "linea.name" . }}
+      component: maru
+  template:
+    metadata:
+      labels:
+        app: {{ include "linea.name" . }}
+        component: maru
+    spec:
+      initContainers:
+      - name: wait-for-sequencer
+        image: curlimages/curl:7.85.0
+        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.portMetrics }}; do sleep 1; done"]
+
+      containers:
+        - name: maru
+          image: "{{ .Values.maru.image.repository }}:{{ .Values.maru.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+
+          command:
+            {{- range .Values.maru.command }}
+            - "{{ . }}"
+            {{- end }}
+
+          # args:
+          #   {{- range .Values.maru.args }}
+          #   - "{{ . }}"
+          #   {{- end }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.maru.service.httpPort }}
+            - name: metrics
+              containerPort: {{ .Values.maru.service.metricsPort }}
+
+          volumeMounts:
+            - name: config
+              mountPath: /opt/consensys/maru/configs/config.toml
+              subPath: config.toml
+
+            - name: config
+              mountPath: /opt/consensys/maru/configs/log4j.xml
+              subPath: log4j.xml
+
+            - name: config
+              mountPath: /opt/consensys/maru/configs/genesis.json
+              subPath: genesis.json
+
+            - name: data
+              mountPath: /opt/consensys/maru/data
+
+            - name: key
+              mountPath: /opt/consensys/maru/key
+              subPath: key
+
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "linea.fullname" . }}-maru-config
+        - name: key
+          secret:
+            secretName: {{ .Values.maru.p2pKeySecretName }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+                storage: {{ .Values.maru.persistence.size }}
+        {{- if .Values.maru.persistence.storageClass }}
+        storageClassName: {{ .Values.maru.persistence.storageClass | quote }}
+        {{- else }}
+        storageClassName: null
+        {{- end }}
+{{- end }}

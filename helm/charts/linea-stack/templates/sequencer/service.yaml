@@ -12,6 +12,9 @@ spec:
     - name: metrics
       port: {{ .Values.sequencer.service.portMetrics }}
       targetPort: {{ .Values.sequencer.service.portMetrics }}
+    - name: p2p
+      port: 30303
+      targetPort: 30303
   selector:
     app: {{ include "linea.name" . }}
     component: sequencer

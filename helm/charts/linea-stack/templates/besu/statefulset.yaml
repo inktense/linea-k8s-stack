@@ -1,0 +1,100 @@
+{{- if .Values.besu.enabled }}
+apiVersion: apps/v1
+
+kind: StatefulSet
+
+metadata:
+  name: {{ include "linea.fullname" . }}-besu
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: besu
+
+spec:
+  serviceName: {{ include "linea.fullname" . }}-besu-svc
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "linea.name" . }}
+      component: besu
+  template:
+    metadata:
+      labels:
+        app: {{ include "linea.name" . }}
+        component: besu
+    spec:
+      initContainers:
+      - name: wait-for-sequencer
+        image: curlimages/curl:7.85.0
+        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.portMetrics }}; do sleep 1; done"]
+     
+      containers:
+        - name: besu
+          image: "{{ .Values.besu.image.repository }}:{{ .Values.besu.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+
+          command:
+            {{- range .Values.besu.command }}
+            - "{{ . }}"
+            {{- end }}
+
+          args:
+            - "--ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-ethstats-svc:3000"
+            - "--config-file=/var/lib/besu/config.toml"
+            - "--genesis-file=/var/lib/besu/genesis.json"
+            - "--bootnodes=enode://{{ .Values.sequencer.enode }}@{{ include "linea.fullname" . }}-sequencer-svc:30303"
+
+          ports:
+            - name: rpc
+              containerPort: {{ .Values.besu.service.rpcPort }}
+            - name: ws
+              containerPort: {{ .Values.besu.service.wsPort }}
+            - name: metrics
+              containerPort: {{ .Values.besu.service.metricsPort }}
+
+          env:
+            - name: LOG4J_CONFIGURATION_FILE
+              value: /var/lib/besu/log4j.xml
+
+          volumeMounts:
+            - name: config
+              mountPath: /var/lib/besu/config.toml
+              subPath: config.toml
+
+            - name: config
+              mountPath: /var/lib/besu/log4j.xml
+              subPath: log4j.xml
+
+            - name: config
+              mountPath: /var/lib/besu/traces-limits.toml
+              subPath: tracelimits.toml
+
+            - name: config
+              mountPath: /var/lib/besu/genesis.json
+              subPath: genesis.json
+
+            - name: config
+              mountPath: /var/lib/besu/deny-list.txt
+              subPath: denylist.txt
+
+            - name: data
+              mountPath: /opt/besu/data
+                
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "linea.fullname" . }}-besu-config
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.besu.persistence.size }}
+        {{- if .Values.besu.persistence.storageClass }}
+        storageClassName: {{ .Values.besu.persistence.storageClass | quote }}
+        {{- else }}
+        storageClassName: null
+        {{- end }}
+{{- end }}
