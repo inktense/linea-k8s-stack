@@ -36,6 +36,26 @@ spec:
             - name: metrics
               containerPort: {{ .Values.sequencer.service.metricsPort }}
 
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+
           env:
             - name: LOG4J_CONFIGURATION_FILE
               value: /var/lib/besu/log4j.xml
