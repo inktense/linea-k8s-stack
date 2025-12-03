@@ -1,0 +1,14 @@
+{
+    "name": "linea-tx-sender",
+    "version": "1.0.0",
+    "main": "src/index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node src/index.js"
+    },
+    "dependencies": {
+        "dotenv": "^17.2.3",
+        "ethers": "^6.12.0",
+        "yargs": "^17.7.2"
+    }
+}
