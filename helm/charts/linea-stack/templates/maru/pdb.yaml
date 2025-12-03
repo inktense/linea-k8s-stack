@@ -1,0 +1,16 @@
+{{- if .Values.maru.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "linea.fullname" . }}-maru-pdb
+  labels:
+    {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/component: maru
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: {{ include "linea.name" . }}
+      component: maru
+{{- end }}
+
