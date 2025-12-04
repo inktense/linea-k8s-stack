@@ -2,7 +2,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import dotenv from "dotenv";
 
-dotenv.config(); // load .env if present
+dotenv.config();
 
 const argv = yargs(hideBin(process.argv))
   .option("pk", {
@@ -16,7 +16,6 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("rpc", {
     type: "string",
-    default: "http://localhost:8545",
     describe: "RPC endpoint"
   })
   .option("interval", {
@@ -47,7 +46,7 @@ export const config = {
       throw new Error("TO_ADDRESS not provided");
     })(),
 
-  rpcUrl: argv.rpc || process.env.RPC_URL || "http://localhost:8545",
+  rpcUrl: process.env.RPC_URL || argv.rpc || "http://localhost:8545",
   interval: argv.interval || Number(process.env.INTERVAL_SECONDS || 1),
   amount: argv.amount || Number(process.env.AMOUNT_WEI || 10)
 };

@@ -1,0 +1,47 @@
+{{- if .Values.txSender.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "linea.fullname" . }}-tx-sender
+  labels:
+    app.kubernetes.io/name: tx-sender
+    {{ include "linea.labels" . | nindent 4 }}
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: tx-sender
+
+  template:
+    metadata:
+      labels:
+        app: tx-sender
+
+    spec:
+      containers:
+        - name: tx-sender
+          image: "{{ .Values.txSender.image.repository }}:{{ .Values.txSender.image.tag }}"
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.txSender.secrets.secretName }}
+                  key: privateKey
+                  optional: false
+            - name: TO_ADDRESS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.txSender.secrets.secretName }}
+                  key: toAddress
+                  optional: false
+            - name: RPC_URL
+              value: "http://{{ include "linea.fullname" . }}-{{ .Values.txSender.rpc.service }}-svc:{{ .Values.txSender.rpc.port }}"
+            - name: INTERVAL_SECONDS
+              value: "{{ .Values.txSender.interval }}"
+            - name: AMOUNT_WEI
+              value: "{{ .Values.txSender.amount }}"
+{{- end }}

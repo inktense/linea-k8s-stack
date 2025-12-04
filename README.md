@@ -36,6 +36,10 @@ helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
      kubectl create secret generic linea-stack-maru-p2p-key \
   --from-file=key=config/maru/key 
 
+   kubectl create secret generic linea-stack-tx-sender-secrets \
+  --from-literal=privateKey=0x... \
+  --from-literal=toAddress=0x...
+
 helm upgrade --install local helm/charts/linea-stack
 
 
@@ -172,3 +176,5 @@ kubectl port-forward -n minio svc/minio 9001:9001
 ## Known Issues
 
 **Maru Metrics**: Maru's metrics endpoint currently returns HTTP 500 with "Invalid registry: io.micrometer.core.instrument.composite.CompositeMeterRegistry". This is a known issue with the maru application's Micrometer registry initialization. Sequencer and Besu metrics are working correctly. Monitoring for maru can be done via logs until this is resolved in a future maru release.
+
+**Besu Engine API Warning**: You may see warnings in Besu logs: `"Execution engine not called in 120 seconds, consensus client may not be connected"`. This is expected during initial sync or when Maru is still starting up. Besu has the Engine API enabled (port 8550) and expects calls from Maru (consensus client), but Maru will only start calling it once it's fully synced with the sequencer. This warning is harmless and should disappear once Maru completes its sync. Besu will continue to function correctly as an RPC node, syncing blocks from the sequencer via P2P.

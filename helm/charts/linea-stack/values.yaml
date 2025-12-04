@@ -151,3 +151,17 @@ backup:
       cpu: 500m
       memory: 512Mi
 
+
+txSender:
+  enabled: true
+  image:
+    repository: bibi12/linea-tx-sender
+    tag: "v1.0.1"
+  secrets:
+    secretName: "linea-stack-tx-sender-secrets"
+  
+  rpc:
+    service: "besu"
+    port: 8545
+  interval: 1
+  amount: 10

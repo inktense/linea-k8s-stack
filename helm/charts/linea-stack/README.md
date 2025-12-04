@@ -61,7 +61,16 @@ kubectl create secret generic linea-stack-maru-p2p-key \
 
 **Note**: Update `sequencer.p2pKeySecretName` and `maru.p2pKeySecretName` in `values.yaml` if using different secret names.
 
+### TX Sender Secrets (Production)
 
+For production deployments, tx-sender requires a Kubernetes Secret with sensitive credentials:
+
+```bash
+# Create tx-sender secrets (REQUIRED for production)
+kubectl create secret generic linea-stack-tx-sender-secrets \
+  --from-literal=privateKey=0x... \
+  --from-literal=toAddress=0x...
+```
 
 ## Components
 
@@ -95,6 +104,23 @@ Besu provides JSON-RPC and WebSocket interfaces. It runs as a StatefulSet with:
 EthStats provides a monitoring dashboard. It runs as a Deployment with:
 - LoadBalancer service for public access
 - WebSocket support for real-time updates
+
+### TX Sender
+
+TX Sender is a service that sends transactions to the blockchain at regular intervals. It runs as a Deployment with:
+- Configurable transaction interval and amount
+- Kubernetes Secrets for secure credential management
+- Environment variable configuration
+
+**Configuration:**
+- `interval`: Seconds between transactions (default: 1)
+- `amount`: Amount in wei to send (default: 10)
+- `rpc.service`: RPC service to connect to (default: besu)
+- `rpc.port`: RPC port (default: 8545)
+
+**Security:**
+- Uses Kubernetes Secrets for private keys and addresses (required for production)
+- Supports development mode with plain text values (NOT for production)
 
 
 ## Monitoring
