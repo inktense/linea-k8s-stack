@@ -1,0 +1,31 @@
+# Development Environment Configuration
+# Copy this file to terraform.tfvars and customize
+
+cluster_name    = "linea-eks-dev"
+region          = "eu-west-2"
+cluster_version = "1.28"
+
+# Node group configuration
+node_groups = {
+  general = {
+    name           = "general"
+    instance_types = ["t3.small"]
+    capacity_type  = "ON_DEMAND"
+    min_size       = 1
+    max_size       = 3
+    desired_size   = 2  # Need at least 2 nodes for Prometheus + Linea stack
+    disk_size      = 30
+    disk_type      = "gp3"
+    labels = {
+      role = "general"
+    }
+    taints = []
+  }
+}
+
+tags = {
+  Environment = "dev"
+  Project     = "linea"
+  ManagedBy   = "terraform"
+}
+
