@@ -2,27 +2,27 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "linea.fullname" . }}-maru
+  name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}
   labels:
     {{ include "linea.labels" . | nindent 4 }}
-    app.kubernetes.io/component: maru
+    app.kubernetes.io/component: {{ .Values.maru.name }}
 spec:
-  serviceName: {{ include "linea.fullname" . }}-maru-svc
+  serviceName: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-svc
   replicas: 1
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
-      component: maru
+      component: {{ .Values.maru.name }}
   template:
     metadata:
       labels:
         app: {{ include "linea.name" . }}
-        component: maru
+        component: {{ .Values.maru.name }}
     spec:
       initContainers:
       - name: wait-for-sequencer
         image: curlimages/curl:7.85.0
-        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
+        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
 
       containers:
         - name: maru
@@ -86,7 +86,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "linea.fullname" . }}-maru-config
+            name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-config
         - name: key
           secret:
             secretName: {{ .Values.maru.p2pKeySecretName }}

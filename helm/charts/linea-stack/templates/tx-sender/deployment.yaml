@@ -2,9 +2,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "linea.fullname" . }}-tx-sender
+  name: {{ include "linea.fullname" . }}-{{ .Values.txSender.name }}
   labels:
-    app.kubernetes.io/name: tx-sender
+    app.kubernetes.io/name: {{ .Values.txSender.name }}
     {{ include "linea.labels" . | nindent 4 }}
 
 spec:
@@ -12,12 +12,12 @@ spec:
 
   selector:
     matchLabels:
-      app: tx-sender
+      app: {{ .Values.txSender.name }}
 
   template:
     metadata:
       labels:
-        app: tx-sender
+        app: {{ .Values.txSender.name }}
 
     spec:
       containers:
@@ -39,7 +39,7 @@ spec:
                   key: toAddress
                   optional: false
             - name: RPC_URL
-              value: "http://{{ include "linea.fullname" . }}-{{ .Values.txSender.rpc.service }}-svc:{{ .Values.txSender.rpc.port }}"
+              value: "http://{{ include "linea.fullname" . }}-{{ .Values.besu.name }}-svc:{{ .Values.txSender.rpc.port }}"
             - name: INTERVAL_SECONDS
               value: "{{ .Values.txSender.interval }}"
             - name: AMOUNT_WEI

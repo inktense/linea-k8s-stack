@@ -6,6 +6,7 @@ global:
 
 sequencer:
   enabled: true
+  name: "sequencer"
 
   image:
     repository: consensys/linea-besu-package
@@ -34,6 +35,7 @@ sequencer:
 
 maru:
   enabled: true
+  name: "maru"
   image:
     repository: consensys/maru
     tag: "0f6dc85"
@@ -71,6 +73,7 @@ maru:
 
 besu:
   enabled: true
+  name: "besu"
   image:
     repository: consensys/linea-besu-package
     tag: "beta-v4.0-rc20-20251104100707-3294a02"
@@ -105,6 +108,7 @@ besu:
 
 ethstats:
   enabled: true
+  name: "ethstats"
   image:
     repository: consensys/linea-ethstats-server
     tag: "7422b2a-1730387766"
@@ -154,6 +158,7 @@ backup:
 
 txSender:
   enabled: true
+  name: "tx-sender"
   image:
     repository: bibi12/linea-tx-sender
     tag: "v1.0.1"
@@ -161,7 +166,6 @@ txSender:
     secretName: "linea-stack-tx-sender-secrets"
   
   rpc:
-    service: "besu"
     port: 8545
   interval: 1
   amount: 10

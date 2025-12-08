@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "linea.fullname" . }}-besu-hpa
+  name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-hpa
   labels:
     {{ include "linea.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: StatefulSet
-    name: {{ include "linea.fullname" . }}-besu
+    name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}
   minReplicas: {{ .Values.besu.hpa.minReplicas }}
   maxReplicas: {{ .Values.besu.hpa.maxReplicas }}
   metrics:

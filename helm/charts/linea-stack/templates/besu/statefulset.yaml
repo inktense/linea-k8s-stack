@@ -4,34 +4,34 @@ apiVersion: apps/v1
 kind: StatefulSet
 
 metadata:
-  name: {{ include "linea.fullname" . }}-besu
+  name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}
   labels:
     {{ include "linea.labels" . | nindent 4 }}
-    app.kubernetes.io/component: besu
+    app.kubernetes.io/component: {{ .Values.besu.name }}
 
 spec:
-  serviceName: {{ include "linea.fullname" . }}-besu-svc
+  serviceName: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-svc
   replicas: 1
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
-      component: besu
+      component: {{ .Values.besu.name }}
   template:
     metadata:
       labels:
         app: {{ include "linea.name" . }}
-        component: besu
+        component: {{ .Values.besu.name }}
     spec:
       initContainers:
       - name: wait-for-sequencer
         image: curlimages/curl:7.85.0
-        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-sequencer-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
+        command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
       - name: resolve-sequencer-ip
         image: alpine:3.18
         command: ["sh", "-c"]
         args:
           - |
-            SEQUENCER_HOST="{{ include "linea.fullname" . }}-sequencer-0.{{ include "linea.fullname" . }}-sequencer-svc"
+            SEQUENCER_HOST="{{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-0.{{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc"
             echo "Resolving $SEQUENCER_HOST..."
             for i in $(seq 1 20); do
               SEQUENCER_IP=$(getent hosts $SEQUENCER_HOST 2>/dev/null | awk '{print $1; exit}')
@@ -59,7 +59,7 @@ spec:
             - |
               SEQUENCER_IP=$(cat /shared/sequencer-ip.txt)
               exec {{ index .Values.besu.command 0 }} \
-                --ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-ethstats-svc:3000 \
+                --ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:3000 \
                 --config-file=/var/lib/besu/config.toml \
                 --genesis-file=/var/lib/besu/genesis.json \
                 --bootnodes=enode://{{ .Values.sequencer.enode }}@${SEQUENCER_IP}:30303
@@ -128,7 +128,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "linea.fullname" . }}-besu-config
+            name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-config
         - name: shared
           emptyDir: {}
 

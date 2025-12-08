@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "linea.fullname" . }}-besu-svc
+  name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-svc
   labels:
     {{ include "linea.labels" . | nindent 4 }}
-    app.kubernetes.io/component: besu
+    app.kubernetes.io/component: {{ .Values.besu.name }}
 spec:
   type: {{ .Values.besu.service.type | default "ClusterIP" }}
   ports:
@@ -20,5 +20,5 @@ spec:
       targetPort: {{ .Values.besu.service.metricsPort }}
   selector:
     app: {{ include "linea.name" . }}
-    component: besu
+    component: {{ .Values.besu.name }}
 {{- end }}

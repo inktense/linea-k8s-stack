@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "linea.fullname" . }}-ethstats
+  name: {{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}
   labels:
     {{ include "linea.labels" . | nindent 4 }}
-    app.kubernetes.io/component: ethstats
+    app.kubernetes.io/component: {{ .Values.ethstats.name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
-      component: ethstats
+      component: {{ .Values.ethstats.name }}
   template:
     metadata:
       labels:
         app: {{ include "linea.name" . }}
-        component: ethstats
+        component: {{ .Values.ethstats.name }}
     spec:
       containers:
         - name: ethstats

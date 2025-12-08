@@ -110,17 +110,17 @@ spec:
           {{- if .Values.sequencer.enabled }}
           - name: sequencer-data
             persistentVolumeClaim:
-              claimName: data-{{ include "linea.fullname" . }}-sequencer-0
+              claimName: data-{{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-0
           {{- end }}
           {{- if .Values.maru.enabled }}
           - name: maru-data
             persistentVolumeClaim:
-              claimName: data-{{ include "linea.fullname" . }}-maru-0
+              claimName: data-{{ include "linea.fullname" . }}-{{ .Values.maru.name }}-0
           {{- end }}
           {{- if .Values.besu.enabled }}
           - name: besu-data
             persistentVolumeClaim:
-              claimName: data-{{ include "linea.fullname" . }}-besu-0
+              claimName: data-{{ include "linea.fullname" . }}-{{ .Values.besu.name }}-0
           {{- end }}
 {{- end }}
 

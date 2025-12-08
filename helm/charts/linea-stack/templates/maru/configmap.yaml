@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "linea.fullname" . }}-maru-config
+  name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-config
 data:
   config.toml: |-
 {{ tpl (.Files.Get "files/config/maru/config.toml.tpl") . | indent 4 }}

@@ -5,7 +5,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "linea.fullname" . }}-sequencer-sm
+  name: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-sm
   namespace: {{ .Values.metrics.serviceMonitor.namespace | default "monitoring" }}
   labels:
     release: {{ .Values.metrics.serviceMonitor.releaseLabel | default "monitoring" }}
@@ -17,7 +17,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "linea.name" . }}
-      app.kubernetes.io/component: sequencer
+      app.kubernetes.io/component: {{ .Values.sequencer.name }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
@@ -34,7 +34,7 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "linea.fullname" . }}-maru-sm
+  name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-sm
   namespace: {{ .Values.metrics.serviceMonitor.namespace | default "monitoring" }}
   labels:
     release: {{ .Values.metrics.serviceMonitor.releaseLabel | default "monitoring" }}
@@ -46,7 +46,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "linea.name" . }}
-      app.kubernetes.io/component: maru
+      app.kubernetes.io/component: {{ .Values.maru.name }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}
@@ -63,7 +63,7 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "linea.fullname" . }}-besu-sm
+  name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-sm
   namespace: {{ .Values.metrics.serviceMonitor.namespace | default "monitoring" }}
   labels:
     release: {{ .Values.metrics.serviceMonitor.releaseLabel | default "monitoring" }}
@@ -75,7 +75,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "linea.name" . }}
-      app.kubernetes.io/component: besu
+      app.kubernetes.io/component: {{ .Values.besu.name }}
   namespaceSelector:
     matchNames:
       - {{ .Release.Namespace }}

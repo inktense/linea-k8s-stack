@@ -2,22 +2,22 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "linea.fullname" . }}-sequencer
+  name: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}
   labels:
     {{ include "linea.labels" . | nindent 4 }}
-    app.kubernetes.io/component: sequencer
+    app.kubernetes.io/component: {{ .Values.sequencer.name }}
 spec:
-  serviceName: {{ include "linea.fullname" . }}-sequencer-svc
+  serviceName: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc
   replicas: 1
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
-      component: sequencer
+      component: {{ .Values.sequencer.name }}
   template:
     metadata:
       labels:
         app: {{ include "linea.name" . }}
-        component: sequencer
+        component: {{ .Values.sequencer.name }}
     spec:
       containers:
         - name: sequencer
@@ -28,7 +28,7 @@ spec:
             - "besu-untuned"
 
           args:
-            - "--ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-ethstats-svc:3000"
+            - "--ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:3000"
             - "--config-file=/var/lib/besu/config.toml"
             - "--node-private-key-file=/var/lib/besu/key"
 
@@ -91,7 +91,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "linea.fullname" . }}-sequencer-config
+            name: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-config
         - name: key
           secret:
             secretName: {{ .Values.sequencer.p2pKeySecretName }}
