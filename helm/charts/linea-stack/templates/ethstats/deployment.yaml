@@ -1,13 +1,16 @@
 {{- if .Values.ethstats.enabled }}
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: {{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}
   labels:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.ethstats.name }}
+
 spec:
-  replicas: 1
+  replicas: {{ .Values.ethstats.replicas | default 1 }}
+
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
@@ -22,8 +25,24 @@ spec:
         - name: ethstats
           image: "{{ .Values.ethstats.image.repository }}:{{ .Values.ethstats.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+
+          {{- if .Values.ethstats.customLivenessProbe }}
+          livenessProbe: {{- omit .Values.ethstats.customLivenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.global.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+
+          {{- if .Values.ethstats.customReadinessProbe }}
+          readinessProbe: {{- omit .Values.ethstats.customReadinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.global.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+
           ports:
             - containerPort: {{ .Values.ethstats.service.port }}
+
           env:
             - name: WS_SECRET
               value: {{ .Values.ethstats.env.WS_SECRET | quote }}

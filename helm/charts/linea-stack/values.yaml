@@ -1,12 +1,34 @@
-replicaCount: 1
-
 global:
   imagePullPolicy: IfNotPresent
   namespace: default
 
+  livenessProbe:
+    enabled: true
+    httpGet:
+      path: /metrics
+      port: metrics
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  readinessProbe:
+    enabled: true
+    httpGet:
+      path: /metrics
+      port: metrics
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+
 sequencer:
   enabled: true
   name: "sequencer"
+  replicas: 3
 
   image:
     repository: consensys/linea-besu-package
@@ -36,6 +58,8 @@ sequencer:
 maru:
   enabled: true
   name: "maru"
+  replicas: 3
+
   image:
     repository: consensys/maru
     tag: "0f6dc85"
@@ -70,10 +94,13 @@ maru:
     type: ClusterIP
 
   p2pKeySecretName: "linea-stack-maru-p2p-key"
+  p2pKeySecretValues: ""
 
 besu:
   enabled: true
   name: "besu"
+  replicas: 1
+
   image:
     repository: consensys/linea-besu-package
     tag: "beta-v4.0-rc20-20251104100707-3294a02"
@@ -109,6 +136,8 @@ besu:
 ethstats:
   enabled: true
   name: "ethstats"
+  replicas: 1
+
   image:
     repository: consensys/linea-ethstats-server
     tag: "7422b2a-1730387766"
@@ -116,8 +145,31 @@ ethstats:
   service:
     type: LoadBalancer
     port: 3000
+
   env:
     WS_SECRET: "12345"
+
+  customLivenessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  customReadinessProbe:
+    enabled: true
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
 
 metrics:
   serviceMonitor:
@@ -159,6 +211,8 @@ backup:
 txSender:
   enabled: true
   name: "tx-sender"
+  replicas: 1
+
   image:
     repository: bibi12/linea-tx-sender
     tag: "v1.0.1"

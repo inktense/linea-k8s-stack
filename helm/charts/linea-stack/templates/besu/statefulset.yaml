@@ -11,7 +11,7 @@ metadata:
 
 spec:
   serviceName: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-svc
-  replicas: 1
+  replicas: {{ .Values.besu.replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
@@ -74,25 +74,19 @@ spec:
             - name: metrics
               containerPort: {{ .Values.besu.service.metricsPort }}
 
+          {{- if .Values.besu.customLivenessProbe }}
+          livenessProbe: {{- omit .Values.besu.customLivenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.livenessProbe.enabled }}
           livenessProbe:
-            httpGet:
-              path: /metrics
-              port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            {{- omit .Values.global.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
+          {{- if .Values.besu.customReadinessProbe }}
+          readinessProbe: {{- omit .Values.besu.customReadinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.readinessProbe.enabled }}
           readinessProbe:
-            httpGet:
-              path: /metrics
-              port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            {{- omit .Values.global.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
           env:
             - name: LOG4J_CONFIGURATION_FILE
@@ -119,7 +113,7 @@ spec:
               mountPath: /var/lib/besu/deny-list.txt
               subPath: denylist.txt
 
-            - name: data
+            - name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-data
               mountPath: /opt/besu/data
 
             - name: shared
@@ -134,7 +128,7 @@ spec:
 
   volumeClaimTemplates:
     - metadata:
-        name: data
+        name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-data
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:

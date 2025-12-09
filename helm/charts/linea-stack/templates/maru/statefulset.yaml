@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: {{ .Values.maru.name }}
 spec:
   serviceName: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-svc
-  replicas: 1
+  replicas: {{ .Values.maru.replicas | default 1 }}
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
@@ -45,23 +45,19 @@ spec:
             - name: metrics
               containerPort: {{ .Values.maru.service.metricsPort }}
 
+          {{- if .Values.maru.customLivenessProbe }}
+          livenessProbe: {{- omit .Values.maru.customLivenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.livenessProbe.enabled }}
           livenessProbe:
-            tcpSocket:
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            {{- omit .Values.global.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
+          {{- if .Values.maru.customReadinessProbe }}
+          readinessProbe: {{- omit .Values.maru.customReadinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.readinessProbe.enabled }}
           readinessProbe:
-            tcpSocket:
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            {{- omit .Values.global.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
           volumeMounts:
             - name: config
@@ -76,7 +72,7 @@ spec:
               mountPath: /opt/consensys/maru/configs/genesis.json
               subPath: genesis.json
 
-            - name: data
+            - name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-data
               mountPath: /opt/consensys/maru/data
 
             - name: key
@@ -93,12 +89,12 @@ spec:
 
   volumeClaimTemplates:
     - metadata:
-        name: data
+        name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-data
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:
           requests:
-                storage: {{ .Values.maru.persistence.size }}
+            storage: {{ .Values.maru.persistence.size }}
         {{- if .Values.maru.persistence.storageClass }}
         storageClassName: {{ .Values.maru.persistence.storageClass | quote }}
         {{- else }}

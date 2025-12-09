@@ -1,6 +1,7 @@
 {{- if .Values.txSender.enabled }}
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: {{ include "linea.fullname" . }}-{{ .Values.txSender.name }}
   labels:
@@ -8,7 +9,7 @@ metadata:
     {{ include "linea.labels" . | nindent 4 }}
 
 spec:
-  replicas: 1
+  replicas: {{ .Values.txSender.replicas | default 1 }}
 
   selector:
     matchLabels:
@@ -24,6 +25,20 @@ spec:
         - name: tx-sender
           image: "{{ .Values.txSender.image.repository }}:{{ .Values.txSender.image.tag }}"
           imagePullPolicy: IfNotPresent
+
+          {{- if .Values.txSender.customLivenessProbe }}
+          livenessProbe: {{- omit .Values.txSender.customLivenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.livenessProbe.enabled }}
+          livenessProbe:
+            {{- omit .Values.global.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+
+          {{- if .Values.txSender.customReadinessProbe }}
+          readinessProbe: {{- omit .Values.txSender.customReadinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.readinessProbe.enabled }}
+          readinessProbe:
+            {{- omit .Values.global.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
           env:
             - name: PRIVATE_KEY

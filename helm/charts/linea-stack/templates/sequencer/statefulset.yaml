@@ -1,14 +1,17 @@
 {{- if .Values.sequencer.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
+
 metadata:
   name: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}
   labels:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.sequencer.name }}
+
 spec:
   serviceName: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc
-  replicas: 1
+  replicas: {{ .Values.sequencer.replicas | default 1 }}
+
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
@@ -36,25 +39,19 @@ spec:
             - name: metrics
               containerPort: {{ .Values.sequencer.service.metricsPort }}
 
+          {{- if .Values.sequencer.customLivenessProbe }}
+          livenessProbe: {{- omit .Values.sequencer.customLivenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.livenessProbe.enabled }}
           livenessProbe:
-            httpGet:
-              path: /metrics
-              port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            {{- omit .Values.global.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
+          {{- if .Values.sequencer.customReadinessProbe }}
+          readinessProbe: {{- omit .Values.sequencer.customReadinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- else if .Values.global.readinessProbe.enabled }}
           readinessProbe:
-            httpGet:
-              path: /metrics
-              port: metrics
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-            successThreshold: 1
+            {{- omit .Values.global.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
 
           env:
             - name: LOG4J_CONFIGURATION_FILE
@@ -81,7 +78,7 @@ spec:
               mountPath: /var/lib/besu/deny-list.txt
               subPath: denylist.txt
 
-            - name: data
+            - name: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-data
               mountPath: /opt/besu/data
 
             - name: key
@@ -98,7 +95,7 @@ spec:
 
   volumeClaimTemplates:
     - metadata:
-        name: data
+        name: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-data
       spec:
         accessModes: ["ReadWriteOnce"]
         resources:

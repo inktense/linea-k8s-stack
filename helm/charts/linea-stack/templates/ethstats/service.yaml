@@ -6,12 +6,15 @@ metadata:
   labels:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.ethstats.name }}
+
 spec:
   type: {{ .Values.ethstats.service.type | default "LoadBalancer" }}
+  
   ports:
     - port: {{ .Values.ethstats.service.port }}
       targetPort: {{ .Values.ethstats.service.port }}
       name: http
+  
   selector:
     app: {{ include "linea.name" . }}
     component: {{ .Values.ethstats.name }}
