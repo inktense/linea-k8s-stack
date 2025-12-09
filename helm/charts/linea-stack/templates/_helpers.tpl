@@ -15,3 +15,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/version: {{ .Chart.AppVersion }}
 app.kubernetes.io/managed-by: Helm
 {{- end -}}
+
+{{/*
+Convert a map of environment variables to Kubernetes env list format
+Usage: {{ include "linea.env" .Values.component.env }}
+*/}}
+{{- define "linea.env" -}}
+{{- if and . (kindIs "map" .) (ne (len .) 0) }}
+{{- range $key, $value := . }}
+- name: {{ $key }}
+  value: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- end -}}

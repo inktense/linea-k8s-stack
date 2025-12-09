@@ -7,6 +7,10 @@ metadata:
   labels:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.sequencer.name }}
+  {{- with .Values.sequencer.statefulsetAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 
 spec:
   serviceName: {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc
@@ -21,6 +25,10 @@ spec:
       labels:
         app: {{ include "linea.name" . }}
         component: {{ .Values.sequencer.name }}
+      {{- with .Values.sequencer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       containers:
         - name: sequencer
@@ -36,6 +44,12 @@ spec:
             - "--node-private-key-file=/var/lib/besu/key"
 
           ports:
+            - name: json-rpc
+              containerPort: {{ .Values.sequencer.service.rpcPort }}
+            - name: engine
+              containerPort: {{ .Values.sequencer.service.enginePort }}
+            - name: ws
+              containerPort: {{ .Values.sequencer.service.wsPort }}
             - name: metrics
               containerPort: {{ .Values.sequencer.service.metricsPort }}
 
@@ -54,6 +68,7 @@ spec:
           {{- end }}
 
           env:
+            {{- include "linea.env" .Values.sequencer.env | nindent 12 }}
             - name: LOG4J_CONFIGURATION_FILE
               value: /var/lib/besu/log4j.xml
 

@@ -15,6 +15,9 @@ spec:
     - name: ws
       port: {{ .Values.besu.service.wsPort }}
       targetPort: {{ .Values.besu.service.wsPort }}
+    - name: engine
+      port: {{ .Values.besu.service.enginePort }}
+      targetPort: {{ .Values.besu.service.enginePort }}
     - name: metrics
       port: {{ .Values.besu.service.metricsPort }}
       targetPort: {{ .Values.besu.service.metricsPort }}

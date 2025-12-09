@@ -8,10 +8,17 @@ metadata:
   labels:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.besu.name }}
+  {{- with .Values.besu.statefulsetAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 
 spec:
   serviceName: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-svc
-  replicas: {{ .Values.besu.replicas | default 1 }}
+  {{- if not .Values.besu.hpa.enabled }}
+  replicas: {{ .Values.besu.replicas }}
+  {{- end }}
+
   selector:
     matchLabels:
       app: {{ include "linea.name" . }}
@@ -21,6 +28,10 @@ spec:
       labels:
         app: {{ include "linea.name" . }}
         component: {{ .Values.besu.name }}
+      {{- with .Values.besu.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       initContainers:
       - name: wait-for-sequencer
@@ -71,6 +82,8 @@ spec:
               containerPort: {{ .Values.besu.service.rpcPort }}
             - name: ws
               containerPort: {{ .Values.besu.service.wsPort }}
+            - name: engine
+              containerPort: {{ .Values.besu.service.enginePort }}
             - name: metrics
               containerPort: {{ .Values.besu.service.metricsPort }}
 
@@ -89,6 +102,7 @@ spec:
           {{- end }}
 
           env:
+            {{- include "linea.env" .Values.besu.env | nindent 12 }}
             - name: LOG4J_CONFIGURATION_FILE
               value: /var/lib/besu/log4j.xml
 

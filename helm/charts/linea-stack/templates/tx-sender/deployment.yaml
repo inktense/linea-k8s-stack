@@ -5,8 +5,12 @@ kind: Deployment
 metadata:
   name: {{ include "linea.fullname" . }}-{{ .Values.txSender.name }}
   labels:
-    app.kubernetes.io/name: {{ .Values.txSender.name }}
     {{ include "linea.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ .Values.txSender.name }}
+  {{- with .Values.txSender.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 
 spec:
   replicas: {{ .Values.txSender.replicas | default 1 }}
@@ -19,12 +23,21 @@ spec:
     metadata:
       labels:
         app: {{ .Values.txSender.name }}
+      {{- with .Values.txSender.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
 
     spec:
       containers:
-        - name: tx-sender
+        - name: {{ .Values.txSender.name }}
           image: "{{ .Values.txSender.image.repository }}:{{ .Values.txSender.image.tag }}"
           imagePullPolicy: IfNotPresent
+
+          {{- if .Values.txSender.resources }}
+          resources:
+            {{- toYaml .Values.txSender.resources | nindent 12 }}
+          {{- end }}
 
           {{- if .Values.txSender.customLivenessProbe }}
           livenessProbe: {{- omit .Values.txSender.customLivenessProbe "enabled" | toYaml | nindent 12 }}
@@ -41,6 +54,7 @@ spec:
           {{- end }}
 
           env:
+            {{- include "linea.env" .Values.txSender.env | nindent 12 }}
             - name: PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
@@ -59,4 +73,5 @@ spec:
               value: "{{ .Values.txSender.interval }}"
             - name: AMOUNT_WEI
               value: "{{ .Values.txSender.amount }}"
+
 {{- end }}

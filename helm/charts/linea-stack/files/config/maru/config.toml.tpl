@@ -22,11 +22,11 @@ cooldown-period = "2 seconds"
 ban-period = "30 seconds"
 
 [payload-validator]
-engine-api-endpoint = { endpoint = "http://{{ include "linea.fullname" . }}-sequencer-svc:8550" }
-eth-api-endpoint    = { endpoint = "http://{{ include "linea.fullname" . }}-sequencer-svc:8545" }
+engine-api-endpoint = { endpoint = "http://{{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.sequencer.service.enginePort }}" }
+eth-api-endpoint    = { endpoint = "http://{{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.sequencer.service.rpcPort }}" }
 
-[follower-engine-apis]
-follower-besu = { endpoint = "http://{{ include "linea.fullname" . }}-besu-svc:8550" }
+# [follower-engine-apis]
+# follower-besu = { endpoint = "http://{{ include "linea.fullname" . }}-{{ .Values.besu.name }}-svc.{{ .Values.global.namespace }}.svc.cluster.local:{{ .Values.besu.service.enginePort }}" }
 
 [observability]
 port = 9545

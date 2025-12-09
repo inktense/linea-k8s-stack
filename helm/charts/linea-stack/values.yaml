@@ -28,17 +28,16 @@ global:
 sequencer:
   enabled: true
   name: "sequencer"
-  replicas: 3
+  replicas: 1
 
   image:
     repository: consensys/linea-besu-package
     tag: "beta-v4.0-rc20-20251104100707-3294a02"
-  resources:
 
+  resources:
     requests:
       cpu: 500m
       memory: 512Mi
-
     limits:
       cpu: 1
       memory: 1Gi
@@ -49,8 +48,21 @@ sequencer:
     storageClass: "" # leave empty to use default
 
   service:
+    rpcPort: 8545
+    enginePort: 8550
+    wsPort: 8546
     metricsPort: 9545
     type: ClusterIP
+  
+  env: {}
+
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+
+  statefulsetAnnotations: {}
+  
+
+  podAnnotations: {}
 
   p2pKeySecretName: "linea-stack-sequencer-p2p-key"
   enode: "14408801a444dafc44afbccce2eb755f902aed3b5743fed787b3c790e021fef28b8c827ed896aa4e8fb46e22bd67c39f994a73768b4b382f8597b0d44370e15d"
@@ -58,27 +70,16 @@ sequencer:
 maru:
   enabled: true
   name: "maru"
-  replicas: 3
+  replicas: 1
 
   image:
     repository: consensys/maru
     tag: "0f6dc85"
 
-  command:
-    - java
-    - -Dlog4j2.configurationFile=configs/maru/log4j.xml
-    - -jar
-    - maru.jar
-    - --maru-genesis-file
-    - configs/genesis.json
-    - --config
-    - configs/config.toml
-
   resources:
     requests:
       cpu: 500m
       memory: 512Mi
-
     limits:
       cpu: 1
       memory: 1Gi
@@ -92,6 +93,15 @@ maru:
     httpPort: 8080
     metricsPort: 9545
     type: ClusterIP
+
+  env: {}
+
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+
+  statefulsetAnnotations: {}
+  
+  podAnnotations: {}
 
   p2pKeySecretName: "linea-stack-maru-p2p-key"
   p2pKeySecretValues: ""
@@ -110,8 +120,18 @@ besu:
   service:
     type: LoadBalancer           
     rpcPort: 8545
+    enginePort: 8550
     wsPort: 8546
     metricsPort: 9545
+  
+  env: {}
+
+  customLivenessProbe: {}
+  customReadinessProbe: {}
+
+  statefulsetAnnotations: {}
+  
+  podAnnotations: {}
   
   resources:
     requests:
@@ -148,7 +168,7 @@ ethstats:
 
   env:
     WS_SECRET: "12345"
-
+  
   customLivenessProbe:
     enabled: true
     httpGet:
@@ -170,6 +190,19 @@ ethstats:
     timeoutSeconds: 5
     failureThreshold: 3
     successThreshold: 1
+
+  deploymentAnnotations: {}
+  
+  podAnnotations: {}
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
 
 metrics:
   serviceMonitor:
@@ -215,11 +248,51 @@ txSender:
 
   image:
     repository: bibi12/linea-tx-sender
-    tag: "v1.0.1"
+    tag: "v1.0.2"
+  
+  deploymentAnnotations: {}
+    # Example:
+    # deployment.kubernetes.io/revision: "1"
+  
+  podAnnotations: {}
+  
   secrets:
     secretName: "linea-stack-tx-sender-secrets"
-  
+
+  env: {}
+
+  customLivenessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  customReadinessProbe:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
   rpc:
     port: 8545
   interval: 1
   amount: 10
+

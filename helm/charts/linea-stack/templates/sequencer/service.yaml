@@ -10,12 +10,18 @@ spec:
   clusterIP: "None"
   type: {{ .Values.sequencer.service.type | default "ClusterIP" }}
   ports:
+    - name: json-rpc
+      port: {{ .Values.sequencer.service.rpcPort }}
+      targetPort: {{ .Values.sequencer.service.rpcPort }}
+    - name: engine
+      port: {{ .Values.sequencer.service.enginePort }}
+      targetPort: {{ .Values.sequencer.service.enginePort }}
+    - name: ws
+      port: {{ .Values.sequencer.service.wsPort }}
+      targetPort: {{ .Values.sequencer.service.wsPort }}
     - name: metrics
       port: {{ .Values.sequencer.service.metricsPort }}
       targetPort: {{ .Values.sequencer.service.metricsPort }}
-    - name: p2p
-      port: 30303
-      targetPort: 30303
   selector:
     app: {{ include "linea.name" . }}
     component: {{ .Values.sequencer.name }}

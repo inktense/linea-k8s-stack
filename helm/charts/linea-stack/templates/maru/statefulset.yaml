@@ -6,6 +6,10 @@ metadata:
   labels:
     {{ include "linea.labels" . | nindent 4 }}
     app.kubernetes.io/component: {{ .Values.maru.name }}
+  {{- with .Values.maru.statefulsetAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   serviceName: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-svc
   replicas: {{ .Values.maru.replicas | default 1 }}
@@ -18,6 +22,10 @@ spec:
       labels:
         app: {{ include "linea.name" . }}
         component: {{ .Values.maru.name }}
+      {{- with .Values.maru.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       initContainers:
       - name: wait-for-sequencer
@@ -29,15 +37,18 @@ spec:
           image: "{{ .Values.maru.image.repository }}:{{ .Values.maru.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
 
-          command:
-            {{- range .Values.maru.command }}
-            - "{{ . }}"
-            {{- end }}
+          env:
+            {{- include "linea.env" .Values.maru.env | nindent 12 }}
 
-          # args:
-          #   {{- range .Values.maru.args }}
-          #   - "{{ . }}"
-          #   {{- end }}
+          command:
+            - "java"
+            - "-Dlog4j2.configurationFile=configs/maru/log4j.xml"
+            - "-jar"
+            - "maru.jar"
+            - "--maru-genesis-file"
+            - "configs/genesis.json"
+            - "--config"
+            - "configs/config.toml"
 
           ports:
             - name: http
