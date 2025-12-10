@@ -116,8 +116,22 @@ maru:
 
   env: {}
 
-  customLivenessProbe: {}
-  customReadinessProbe: {}
+  customLivenessProbe:
+    tcpSocket:
+      port: metrics
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  customReadinessProbe:
+    tcpSocket:
+      port: metrics
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
 
   statefulsetAnnotations: {}
   
