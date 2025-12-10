@@ -29,6 +29,16 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      {{- with .Values.ethstats.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.ethstats.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       containers:
         - name: ethstats
           image: "{{ .Values.ethstats.image.repository }}:{{ .Values.ethstats.image.tag }}"

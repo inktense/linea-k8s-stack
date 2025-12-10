@@ -18,6 +18,9 @@ spec:
     - name: engine
       port: {{ .Values.besu.service.enginePort }}
       targetPort: {{ .Values.besu.service.enginePort }}
+    - name: p2p
+      port: {{ .Values.besu.service.p2pPort }}
+      targetPort: {{ .Values.besu.service.p2pPort }}
     - name: metrics
       port: {{ .Values.besu.service.metricsPort }}
       targetPort: {{ .Values.besu.service.metricsPort }}

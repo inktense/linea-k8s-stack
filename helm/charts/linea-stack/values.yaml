@@ -51,6 +51,7 @@ sequencer:
     rpcPort: 8545
     enginePort: 8550
     wsPort: 8546
+    p2pPort: 30303
     metricsPort: 9545
     type: ClusterIP
   
@@ -63,6 +64,25 @@ sequencer:
   
 
   podAnnotations: {}
+
+  nodeAffinity: {}
+  # Example:
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: role
+  #           operator: In
+  #           values:
+  #             - general
+
+  tolerations: []
+  # Example:
+  # tolerations:
+  #   - key: "example-key"
+  #     operator: "Equal"
+  #     value: "example-value"
+  #     effect: "NoSchedule"
 
   p2pKeySecretName: "linea-stack-sequencer-p2p-key"
   enode: "14408801a444dafc44afbccce2eb755f902aed3b5743fed787b3c790e021fef28b8c827ed896aa4e8fb46e22bd67c39f994a73768b4b382f8597b0d44370e15d"
@@ -103,6 +123,9 @@ maru:
   
   podAnnotations: {}
 
+  nodeAffinity: {}
+  tolerations: []
+
   p2pKeySecretName: "linea-stack-maru-p2p-key"
   p2pKeySecretValues: ""
 
@@ -122,6 +145,7 @@ besu:
     rpcPort: 8545
     enginePort: 8550
     wsPort: 8546
+    p2pPort: 30303
     metricsPort: 9545
   
   env: {}
@@ -132,6 +156,9 @@ besu:
   statefulsetAnnotations: {}
   
   podAnnotations: {}
+
+  nodeAffinity: {}
+  tolerations: []
   
   resources:
     requests:
@@ -195,6 +222,9 @@ ethstats:
   
   podAnnotations: {}
 
+  nodeAffinity: {}
+  tolerations: []
+
   resources:
     requests:
       cpu: 100m
@@ -255,6 +285,9 @@ txSender:
     # deployment.kubernetes.io/revision: "1"
   
   podAnnotations: {}
+
+  nodeAffinity: {}
+  tolerations: []
   
   secrets:
     secretName: "linea-stack-tx-sender-secrets"

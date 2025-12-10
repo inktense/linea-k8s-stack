@@ -19,6 +19,9 @@ spec:
     - name: ws
       port: {{ .Values.sequencer.service.wsPort }}
       targetPort: {{ .Values.sequencer.service.wsPort }}
+    - name: p2p
+      port: {{ .Values.sequencer.service.p2pPort }}
+      targetPort: {{ .Values.sequencer.service.p2pPort }}
     - name: metrics
       port: {{ .Values.sequencer.service.metricsPort }}
       targetPort: {{ .Values.sequencer.service.metricsPort }}

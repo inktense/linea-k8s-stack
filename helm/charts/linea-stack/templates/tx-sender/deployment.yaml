@@ -29,6 +29,16 @@ spec:
       {{- end }}
 
     spec:
+      {{- with .Values.txSender.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.txSender.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       containers:
         - name: {{ .Values.txSender.name }}
           image: "{{ .Values.txSender.image.repository }}:{{ .Values.txSender.image.tag }}"

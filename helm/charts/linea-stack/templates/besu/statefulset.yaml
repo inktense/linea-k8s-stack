@@ -32,7 +32,18 @@ spec:
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
     spec:
+      {{- with .Values.besu.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.besu.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       initContainers:
       - name: wait-for-sequencer
         image: curlimages/curl:7.85.0
@@ -73,7 +84,7 @@ spec:
                 --ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:3000 \
                 --config-file=/var/lib/besu/config.toml \
                 --genesis-file=/var/lib/besu/genesis.json \
-                --bootnodes=enode://{{ .Values.sequencer.enode }}@${SEQUENCER_IP}:30303
+                --bootnodes=enode://{{ .Values.sequencer.enode }}@${SEQUENCER_IP}:{{ .Values.sequencer.service.p2pPort }}
 
           args: []
 
@@ -84,6 +95,8 @@ spec:
               containerPort: {{ .Values.besu.service.wsPort }}
             - name: engine
               containerPort: {{ .Values.besu.service.enginePort }}
+            - name: p2p
+              containerPort: {{ .Values.besu.service.p2pPort }}
             - name: metrics
               containerPort: {{ .Values.besu.service.metricsPort }}
 
@@ -129,7 +142,6 @@ spec:
 
             - name: {{ include "linea.fullname" . }}-{{ .Values.besu.name }}-data
               mountPath: /opt/besu/data
-
             - name: shared
               mountPath: /shared
                 

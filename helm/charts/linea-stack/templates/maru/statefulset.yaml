@@ -27,10 +27,29 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      {{- with .Values.maru.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.maru.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       initContainers:
       - name: wait-for-sequencer
         image: curlimages/curl:7.85.0
         command: ["sh","-c","until nc -z {{ include "linea.fullname" . }}-{{ .Values.sequencer.name }}-svc {{ .Values.sequencer.service.metricsPort }}; do sleep 1; done"]
+      
+      - name: copy-log4j
+        image: busybox:1.36
+        command: ["sh", "-c", "cp /config/log4j.xml /writable/log4j.xml && chmod 666 /writable/log4j.xml"]
+        volumeMounts:
+          - name: config
+            mountPath: /config
+          - name: writable-config
+            mountPath: /writable
 
       containers:
         - name: maru
@@ -42,7 +61,7 @@ spec:
 
           command:
             - "java"
-            - "-Dlog4j2.configurationFile=configs/maru/log4j.xml"
+            - "-Dlog4j2.configurationFile=/tmp/log4j.xml"
             - "-jar"
             - "maru.jar"
             - "--maru-genesis-file"
@@ -76,12 +95,11 @@ spec:
               subPath: config.toml
 
             - name: config
-              mountPath: /opt/consensys/maru/configs/log4j.xml
-              subPath: log4j.xml
-
-            - name: config
               mountPath: /opt/consensys/maru/configs/genesis.json
               subPath: genesis.json
+
+            - name: writable-config
+              mountPath: /tmp
 
             - name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-data
               mountPath: /opt/consensys/maru/data
@@ -94,6 +112,8 @@ spec:
         - name: config
           configMap:
             name: {{ include "linea.fullname" . }}-{{ .Values.maru.name }}-config
+        - name: writable-config
+          emptyDir: {}
         - name: key
           secret:
             secretName: {{ .Values.maru.p2pKeySecretName }}

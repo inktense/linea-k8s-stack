@@ -30,6 +30,16 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
+      {{- with .Values.sequencer.nodeAffinity }}
+      affinity:
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+      {{- end }}
+      {{- with .Values.sequencer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
       containers:
         - name: sequencer
           image: "{{ .Values.sequencer.image.repository }}:{{ .Values.sequencer.image.tag }}"
@@ -50,6 +60,8 @@ spec:
               containerPort: {{ .Values.sequencer.service.enginePort }}
             - name: ws
               containerPort: {{ .Values.sequencer.service.wsPort }}
+            - name: p2p
+              containerPort: {{ .Values.sequencer.service.p2pPort }}
             - name: metrics
               containerPort: {{ .Values.sequencer.service.metricsPort }}
 
