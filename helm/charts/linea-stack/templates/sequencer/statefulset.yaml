@@ -49,7 +49,7 @@ spec:
             - "besu-untuned"
 
           args:
-            - "--ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:3000"
+            - "--ethstats=ws://sequencer-node:{{ .Values.ethstats.env.WS_SECRET }}@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:{{ .Values.ethstats.service.port }}"
             - "--config-file=/var/lib/besu/config.toml"
             - "--node-private-key-file=/var/lib/besu/key"
 

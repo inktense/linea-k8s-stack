@@ -81,7 +81,7 @@ spec:
             - |
               SEQUENCER_IP=$(cat /shared/sequencer-ip.txt)
               exec {{ index .Values.besu.command 0 }} \
-                --ethstats=ws://besu-node:12345@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:3000 \
+                --ethstats=ws://besu-node:{{ .Values.ethstats.env.WS_SECRET }}@{{ include "linea.fullname" . }}-{{ .Values.ethstats.name }}-svc:{{ .Values.ethstats.service.port }} \
                 --config-file=/var/lib/besu/config.toml \
                 --genesis-file=/var/lib/besu/genesis.json \
                 --bootnodes=enode://{{ .Values.sequencer.enode }}@${SEQUENCER_IP}:{{ .Values.sequencer.service.p2pPort }}
