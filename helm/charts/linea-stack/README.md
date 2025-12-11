@@ -217,3 +217,28 @@ kubectl get cronjobs
 kubectl get jobs
 kubectl logs job/<backup-job-name>
 ```
+
+## Tradeoffs & Production Notes
+
+Some tradeoffs have been made in the design of this project.
+
+**Current Tradeoffs:**
+- Uses `LoadBalancer` services instead of Ingress (simpler but more expensive, no TLS)
+- Default namespace instead of dedicated (fine for single deployments)
+- Single replicas for Sequencer/Maru (no HA out of the box)
+- Implicit rolling update strategy (works but no fine-grained control)
+- No NetworkPolicies or security policies (wide-open access)
+
+**For Production on EKS:**
+
+1. **Use Ingress instead of LoadBalancer** - One ALB with TLS termination is cheaper and better than multiple LBs
+2. **Add explicit deployment strategies** - Set `maxSurge` and `maxUnavailable` for zero-downtime updates
+3. **Increase replicas** - Sequencer and Maru are core components, they should have more replicas
+4. **Use dedicated namespace** - Better isolation and resource management
+5. **Add NetworkPolicies** - Restrict pod-to-pod communication
+6. **Enable backups** - Curent backup implementation is an example and not enabled
+7. **Configure IRSA** - Use IAM roles for service accounts instead of access keys (Example for S3 backup)
+8. **Set up monitoring/alerting** - ServiceMonitors are configured, add Grafana dashboards and alerts
+9. **Multi-AZ deployment** - Use podAntiAffinity to spread pods across zones
+10. **Resource quotas** - Set namespace quotas to prevent resource exhaustion
+
